@@ -25,3 +25,23 @@ def generate_pattern(guess, answer):
                     break
 
     return tuple(pattern)
+
+
+def precompute_patterns(allowed_words):
+    """Precompute feedback patterns for all pairs of allowed words."""
+    pattern_dict = {}
+    for guess in allowed_words:
+        for answer in allowed_words:
+            pattern = generate_pattern(guess, answer)
+            pattern_dict[(guess, answer)] = pattern
+    return pattern_dict
+
+
+def pattern_to_int(pattern):
+    """Convert a feedback pattern to an integer."""
+    return sum(p * (3 ** i) for i, p in enumerate(pattern))
+
+def generate_pattern_as_int(guess, answer):
+    """Generate the feedback pattern as an integer."""
+    return pattern_to_int(generate_pattern(guess, answer))
+
