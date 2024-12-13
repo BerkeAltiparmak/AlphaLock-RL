@@ -54,7 +54,8 @@ class RLAgent:
         - log_prob (torch.Tensor): Log probability of the chosen action.
         """
         state_tensor = torch.tensor(np.array(state), dtype=torch.float32)
-        action_probs = self.policy_network(state_tensor)
+        print(f"State Tensor: {state_tensor}")  # Debugging input state
+        action_probs = torch.clamp(self.policy_network(state_tensor), min=1e-6)  # Prevent zero probabilities
         action = action_probs.detach().numpy()
         log_prob = torch.sum(torch.log(action_probs))  # Log probability of the chosen action
         self.log_probs.append(log_prob)
@@ -83,6 +84,7 @@ class RLAgent:
         # Normalize rewards for stability
         discounted_rewards = torch.tensor(discounted_rewards, dtype=torch.float32)
         discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9)
+        print(f"Discounted Rewards: {discounted_rewards}")  # Debugging rewards
 
         # Compute loss
         loss = 0
@@ -92,6 +94,7 @@ class RLAgent:
         # Update the policy network
         self.optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_network.parameters(), max_norm=1.0)  # Prevent gradient explosion
         self.optimizer.step()
 
         # Clear memory
