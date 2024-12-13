@@ -53,7 +53,7 @@ class RLAgent:
         - action (np.ndarray): Chosen [alpha, beta] values.
         - log_prob (torch.Tensor): Log probability of the chosen action.
         """
-        state_tensor = torch.tensor(state, dtype=torch.float32)
+        state_tensor = torch.tensor(np.array(state), dtype=torch.float32)
         action_probs = self.policy_network(state_tensor)
         action = action_probs.detach().numpy()
         log_prob = torch.sum(torch.log(action_probs))  # Log probability of the chosen action

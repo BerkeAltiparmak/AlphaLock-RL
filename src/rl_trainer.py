@@ -1,8 +1,24 @@
 import numpy as np
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
-from score_calculator import select_best_word
+from reward_calculator import select_best_word
 from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY
+
+def flatten_state(state):
+    """
+    Flatten the state dictionary into a single-dimensional list.
+    
+    Parameters:
+    - state (dict): State dictionary from the environment.
+    
+    Returns:
+    - list: Flattened state representation.
+    """
+    return [
+        state["pool_entropy"],  # Numeric value
+        state["attempts_remaining"],  # Numeric value
+        len(state["feedback_history"]),  # Derived numeric value
+    ]
 
 def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99):
     """
@@ -31,7 +47,8 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
 
         while not done:
             # Agent selects action (alpha, beta)
-            action = agent.select_action(list(state.values()))
+            flat_state = flatten_state(state)
+            action = agent.select_action(flat_state)
             alpha, beta = action
 
             # Pick the best word using the score calculator
@@ -114,6 +131,7 @@ def evaluate_agent(agent, episodes=100):
 if __name__ == "__main__":
     # Train the agent
     trained_agent = train_agent(episodes=1000)
+    trained_agent.save_model("trained_rl_agent.pth")
 
     # Evaluate the agent
     #evaluate_agent(trained_agent, episodes=100)
