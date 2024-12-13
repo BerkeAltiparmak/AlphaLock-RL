@@ -20,7 +20,7 @@ def flatten_state(state):
         len(state["feedback_history"]),  # Derived numeric value
     ]
 
-def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99):
+def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99):
     """
     Train the RL agent on the Alphalock game.
 
@@ -37,6 +37,7 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
     # Initialize the environment and the agent
     env = AlphalockEnvironment()
     agent = RLAgent(state_dim, hidden_dim, lr, gamma)
+    alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
 
     for episode in range(episodes):
         state = env.reset()
@@ -45,10 +46,9 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
 
         print(f"Episode {episode + 1}/{episodes}")
 
-        alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
-
         while not done:
             start_time = time.time()
+            
             if len(env.feedback_history) == 0:  # First guess
                 guess = "sera"  # Precomputed optimal first guess through Information Theory
             else:
@@ -82,12 +82,14 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
 
             state = next_state
 
-        # Update the agent's policy
-        agent.update_policy()
-
         # Log the results of the episode
         total_reward = sum(episode_rewards)
         print(f"Episode {episode + 1} finished with total reward: {total_reward}")
+
+        # Perform policy update after a batch of episodes
+        if (episode + 1) % batch_size == 0:
+            agent.update_policy()
+            print(f"Policy updated after batch of {batch_size} episodes.")
 
     return agent
 
