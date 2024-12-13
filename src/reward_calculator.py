@@ -51,7 +51,7 @@ def calculate_scores(allowed_words, possible_words, word_frequencies, alpha, bet
     highest_it_word = None
     highest_it_score = float('-inf')
 
-    for word in allowed_words:
+    for word in possible_words:
         it_score = entropies.get(word, 0)
         rwf_score = rwf.get(word, 0)
         scores[word] = alpha * it_score + beta * rwf_score

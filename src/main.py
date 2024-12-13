@@ -2,10 +2,11 @@ import json
 import time
 import random
 import numpy as np
-from src.infotheory_solver import simulate_game
-from src.rl_agent import RLAgent
-from src.rl_environment import AlphalockEnvironment
-from src.config import WORD_FREQS_FILE, MODEL_PATH
+from infotheory_solver import simulate_game
+from rl_agent import RLAgent
+from rl_environment import AlphalockEnvironment
+from reward_calculator import select_best_word
+from config import WORD_FREQS_FILE, MODEL_PATH
 
 def generate_random_solution(word_frequencies):
     """
@@ -34,10 +35,6 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
     - word_frequencies (dict): Word frequency data.
     - num_trials (int): Number of trials for comparison.
     """
-    # Load RL agent
-    rl_agent = RLAgent(state_dim=3, hidden_dim=128)
-    rl_agent.load_model(MODEL_PATH)
-
     it_results = []
     rl_results = []
 
@@ -59,8 +56,14 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
 
         # RL-based solver
         print("Running RL-based solver...")
+
+        # Load RL agent
+        rl_agent = RLAgent(state_dim=3, hidden_dim=128)
+        rl_agent.load_model(MODEL_PATH)
+
         env = AlphalockEnvironment()
         env.solution = solution  # Set the solution in the environment
+        alpha, beta = 1.0, 0  # Initial alpha and beta values (defined to explore early)
 
         rl_start = time.time()
         state = env.reset()
@@ -90,6 +93,12 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
 
             rl_guesses.append(guess)
             state, _, done = env.step(guess, alpha, beta)
+
+            # Log guess details
+            print(f"Guess #{len(rl_guesses)}:")
+            print(f"  Word: {guess}")
+            print(f"  Information Theory Coefficient: {alpha}")
+            print(f"  Pool Size: {len(env.possible_words)}")
 
         rl_time = time.time() - rl_start
         rl_results.append((len(rl_guesses), rl_time))
