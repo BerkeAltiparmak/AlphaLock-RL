@@ -22,6 +22,32 @@ def flatten_state(state):
         len(state["feedback_history"]),  # Derived numeric value
     ]
 
+def load_json(file_path):
+    """
+    Load a JSON file if it exists, otherwise return an empty dictionary.
+
+    Parameters:
+    - file_path (str): Path to the JSON file.
+
+    Returns:
+    - dict: Loaded JSON data or an empty dictionary.
+    """
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_json(data, file_path):
+    """
+    Save a dictionary to a JSON file.
+
+    Parameters:
+    - data (dict): Data to save.
+    - file_path (str): Path to the JSON file.
+    """
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=4)
+
 def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path="trained_rl_agent.pth"):
     """
     Train the RL agent on the Alphalock game.
@@ -48,16 +74,20 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
     if os.path.exists(model_path):
         print(f"Model found at {model_path}. Loading...")
         agent.load_model(model_path)
-        print("Model loaded successfully.")
+        print("Pretrained model loaded successfully.")
     else:
         print(f"No existing model found at {model_path}. Starting fresh training.")
 
     alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
 
-    # Data tracking
-    alpha_beta_mapping = {}
-    episode_rewards = {}
-    episode_guesses = {}
+    # Load existing JSON files if they exist
+    alpha_beta_mapping = load_json("alpha_beta_mapping.json")
+    episode_rewards = load_json("episode_rewards.json")
+    episode_guesses = load_json("episode_guesses.json")
+
+    # Adjust episode numbers based on existing data
+    final_episode_in_file = max(map(int, episode_rewards.keys()), default=0)
+
     batch_rewards = []
     batch_guesses = []
 
@@ -67,7 +97,9 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
         total_guesses = 0
         episode_total_rewards = []
 
-        print(f"Episode {episode + 1}/{episodes}")
+        current_episode = final_episode_in_file + episode + 1
+
+        print(f"Episode {current_episode}/{final_episode_in_file + episodes}")
 
         while not done:
             start_time = time.time()
@@ -103,7 +135,7 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             end_time = time.time()
 
             # Log guess details
-            print(f"Episode {episode + 1}, Guess #{len(env.feedback_history)}:")
+            print(f"Episode {current_episode}, Guess #{len(env.feedback_history)}:")
             print(f"  Word: {guess}")
             print(f"  Alpha: {alpha}, Beta: {beta}")
             print(f"  Pool Size: {len(env.possible_words)}")
@@ -114,12 +146,12 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
 
         # Log the results of the episode
         total_reward = sum(episode_total_rewards)
-        print(f"Episode {episode} finished with total reward: {total_reward}")
+        print(f"Episode {current_episode} finished with total reward: {total_reward}")
         print(f"Total guesses needed: {total_guesses}")
 
         # Store episode data
-        episode_rewards[episode] = total_reward
-        episode_guesses[episode] = total_guesses
+        episode_rewards[current_episode] = total_reward
+        episode_guesses[current_episode] = total_guesses
         batch_rewards.append(total_reward)
         batch_guesses.append(total_guesses)
 
@@ -134,15 +166,10 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             batch_rewards = []  # Reset batch rewards
             batch_guesses = []  # Reset batch guesses
 
-    # Save data to JSON files
-    with open("alpha_beta_mapping.json", "w") as f:
-        json.dump(alpha_beta_mapping, f, indent=4)
-
-    with open("episode_rewards.json", "w") as f:
-        json.dump(episode_rewards, f, indent=4)
-
-    with open("episode_guesses.json", "w") as f:
-        json.dump(episode_guesses, f, indent=4)
+    # Save updated JSON files
+    save_json(alpha_beta_mapping, "alpha_beta_mapping.json")
+    save_json(episode_rewards, "episode_rewards.json")
+    save_json(episode_guesses, "episode_guesses.json")
 
     return agent
 
