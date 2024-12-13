@@ -1,4 +1,3 @@
-
 def calculate_relative_word_frequencies(possible_words, word_frequencies):
     """
     Calculate the Relative Word Frequencies (RWF) for words in the current pool of possible words.
