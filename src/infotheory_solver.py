@@ -18,6 +18,8 @@ import time
 def simulate_game(allowed_words, possible_words, solution, first_guess=None, max_attempts=10):
     """Simulate the game using the IT-based approach, with an optional first guess."""
     guesses = []
+    possible_words_list = []
+    feedback_list = []
     attempts = 0
 
     # Use the provided first guess if available
@@ -51,5 +53,5 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
     if attempts >= max_attempts:
         print("Warning: Maximum attempts reached. The game might not have converged.")
 
-    return guesses
+    return guesses, 
 

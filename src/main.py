@@ -14,17 +14,31 @@ def generate_random_solution(word_frequencies):
     """
     words = list(word_frequencies.keys())
     frequencies = list(word_frequencies.values())
+    weights = [freq for freq in frequencies]
 
-    # Apply log smoothing
-    smoothed_weights = [np.log(freq + 0.0001) for freq in frequencies]
+    # Normalize the weights
+    total_weight = sum(weights)
+    normalized_weights = [w / total_weight for w in weights]
 
-    # Normalize the smoothed weights
-    total_weight = sum(smoothed_weights)
-    normalized_weights = [w / total_weight for w in smoothed_weights]
-
-    # Select a random word based on smoothed weights
+    # Select a random word based on weights. This mimics the choice of the AlphaLock's creator
+    # as humans tend to choose common words for the solutions of word-based games.
     solution = random.choices(words, weights=normalized_weights, k=1)[0]
     return solution
+
+def log_guess_details(guess_num, guess, pool_size, alpha=None, model_type="IT"):
+    """
+    Log details for each guess in a uniform format.
+
+    Parameters:
+    - guess_num (int): Guess number.
+    - guess (str): The guessed word.
+    - pool_size (int): The remaining pool size.
+    - alpha (float, optional): Information theory coefficient (for RL-based solver).
+    - model_type (str): Model type ("IT" or "RL").
+    """
+    print(f"[{model_type}] Guess #{guess_num}: Word = {guess}, Pool Size = {pool_size}")
+    if alpha is not None:
+        print(f"  Information Theory Coefficient: {alpha}")
 
 def compare_models(allowed_words, word_frequencies, num_trials=10):
     """
@@ -52,6 +66,10 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
         it_time = time.time() - it_start
         it_results.append((len(it_guesses), it_time))
 
+        for i, guess in enumerate(it_guesses, start=1):
+            log_guess_details(i, guess, len(allowed_words), model_type="IT")
+
+        print(f"IT-based solver's final prediction: {it_guesses[-1]}")
         print(f"IT-based solver finished in {len(it_guesses)} guesses and {it_time:.2f} seconds.")
 
         # RL-based solver
@@ -62,11 +80,11 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
         rl_agent.load_model(MODEL_PATH)
 
         env = AlphalockEnvironment()
-        env.solution = solution  # Set the solution in the environment
         alpha, beta = 1.0, 0  # Initial alpha and beta values (defined to explore early)
 
         rl_start = time.time()
         state = env.reset()
+        env.solution = solution  # Set the solution in the environment
         done = False
         rl_guesses = []
 
@@ -95,15 +113,13 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
             state, _, done = env.step(guess, alpha, beta)
 
             # Log guess details
-            print(f"Guess #{len(rl_guesses)}:")
-            print(f"  Word: {guess}")
-            print(f"  Information Theory Coefficient: {alpha}")
-            print(f"  Pool Size: {len(env.possible_words)}")
+            log_guess_details(len(rl_guesses), guess, len(env.possible_words), alpha=alpha, model_type="RL")
 
         rl_time = time.time() - rl_start
         rl_results.append((len(rl_guesses), rl_time))
 
         print(f"RL-based solver finished in {len(rl_guesses)} guesses and {rl_time:.2f} seconds.")
+        print(f"RL-based solver's final prediction: {rl_guesses[-1]}")
 
     # Aggregate and print results
     avg_it_guesses = np.mean([r[0] for r in it_results])
