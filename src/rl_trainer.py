@@ -6,8 +6,9 @@ from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
 from reward_calculator import select_best_word
 from utils import flatten_state, load_json, save_json, load_alpha_beta_mapping, save_alpha_beta_mapping
+from config import ALPHA_BETA_MAPPING_FILE, EPISODE_REWARDS_FILE, EPISODE_GUESSES_FILE, MODEL_PATH
 
-def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path="trained_rl_agent.pth"):
+def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path=MODEL_PATH):
     """
     Train the RL agent on the Alphalock game.
 
@@ -40,9 +41,9 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
     alpha, beta = 1.0, 0  # Initial alpha and beta values (defined to explore early)
 
     # Load existing JSON files if they exist
-    alpha_beta_mapping = load_alpha_beta_mapping("alpha_beta_mapping.json")
-    episode_rewards = load_json("episode_rewards.json")
-    episode_guesses = load_json("episode_guesses.json")
+    alpha_beta_mapping = load_alpha_beta_mapping(ALPHA_BETA_MAPPING_FILE)
+    episode_rewards = load_json(EPISODE_REWARDS_FILE)
+    episode_guesses = load_json(EPISODE_GUESSES_FILE)
 
     # Adjust episode numbers based on existing data
     final_episode_in_file = max(map(int, episode_rewards.keys()), default=0)
@@ -127,13 +128,14 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             batch_guesses = []  # Reset batch guesses
 
     # Save updated JSON files
-    save_alpha_beta_mapping(alpha_beta_mapping, "alpha_beta_mapping.json")
-    save_json(episode_rewards, "episode_rewards.json")
-    save_json(episode_guesses, "episode_guesses.json")
+    save_alpha_beta_mapping(alpha_beta_mapping, ALPHA_BETA_MAPPING_FILE)
+    save_json(episode_rewards, EPISODE_REWARDS_FILE)
+    save_json(episode_guesses, EPISODE_GUESSES_FILE)
 
     return agent
 
 if __name__ == "__main__":
     # Train the agent
     trained_agent = train_agent(episodes=1, batch_size=4)
-    trained_agent.save_model("trained_rl_agent.pth")
+    trained_agent.save_model(MODEL_PATH)
+    print(f"Trained model saved at {MODEL_PATH}.")
