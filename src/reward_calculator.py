@@ -48,11 +48,22 @@ def calculate_scores(allowed_words, possible_words, word_frequencies, alpha, bet
 
     # Combine IT and RWF into a single score
     scores = {}
+    highest_it_word = None
+    highest_it_score = float('-inf')
+
     for word in allowed_words:
         it_score = entropies.get(word, 0)
         rwf_score = rwf.get(word, 0)
         scores[word] = alpha * it_score + beta * rwf_score
 
+        # Check for the highest it_score
+        if it_score > highest_it_score:
+            highest_it_score = it_score
+            highest_it_word = word
+
+    # Print the word with the highest it_score and its score
+    print(f"Word with the highest IT score: {highest_it_word}")
+    print(f"Highest IT score: {highest_it_score}")
     return scores
 
 def select_best_word(allowed_words, possible_words, word_frequencies, alpha, beta):

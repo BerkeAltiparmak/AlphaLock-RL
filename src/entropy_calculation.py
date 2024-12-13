@@ -25,4 +25,14 @@ def calculate_entropies(allowed_words, possible_words):
         probabilities = np.array(list(distribution.values())) / total
         entropies[word] = entropy(probabilities, base=2)
 
-    return entropies
+    # Normalize the entropies to the range [0, 1]
+    entropy_values = np.array(list(entropies.values()))
+    min_entropy = np.min(entropy_values)
+    max_entropy = np.max(entropy_values)
+
+    normalized_entropies = {
+        word: (ent - min_entropy) / (max_entropy - min_entropy) if max_entropy > min_entropy else 1
+        for word, ent in entropies.items()
+    }
+
+    return normalized_entropies
