@@ -8,7 +8,8 @@ REWARD_SCALING = "exponential"
 
 # Reward Settings
 SUCCESS_REWARD = 100
-FAILURE_PENALTY = -50
+INTERMEDIATE_SCALING = 10
+FAILURE_PENALTY = -100
 
 # Data Paths
 WORD_FREQS_FILE = "../data/4letter_word_freqs.json"

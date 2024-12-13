@@ -2,7 +2,7 @@ import random
 from pattern_utils import generate_pattern
 from reward_calculator import compute_reward
 from data_preprocessor import load_dictionaries, normalize_frequencies
-from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING, WORD_FREQS_FILE
+from config import MAX_ATTEMPTS, SUCCESS_REWARD, INTERMEDIATE_SCALING, FAILURE_PENALTY, REWARD_SCALING, WORD_FREQS_FILE
 
 class AlphalockEnvironment:
     def __init__(self):
@@ -75,20 +75,28 @@ class AlphalockEnvironment:
             reward = compute_reward(True, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
             done = True
         else:
+            # Track the size of the pool before the update
+            pool_size_before = len(self.possible_words)
+
             # Update the possible word pool based on feedback
             self.possible_words = [
                 word for word in self.possible_words if generate_pattern(guess, word) == feedback
             ]
+
+            # Calculate intermediate reward based on pool reduction
+            pool_size_after = len(self.possible_words)
+            pool_reduction = pool_size_before - pool_size_after
+            intermediate_reward = pool_reduction / pool_size_before if pool_size_before > 0 else 0
 
             # Decrement remaining attempts
             self.attempts_remaining -= 1
 
             # Check if the game is over due to attempts running out
             if self.attempts_remaining == 0:
-                reward = compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
+                reward = INTERMEDIATE_SCALING * compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
                 done = True
             else:
-                reward = 0  # No reward for intermediate steps
+                reward = intermediate_reward  # Reward for reducing the pool
                 done = False
 
         # Return the new state, reward, and done flag
