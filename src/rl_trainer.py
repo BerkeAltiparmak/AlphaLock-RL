@@ -3,7 +3,6 @@ import numpy as np
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
 from reward_calculator import select_best_word
-from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY
 
 def flatten_state(state):
     """

@@ -2,7 +2,7 @@ import random
 from pattern_utils import generate_pattern
 from reward_calculator import compute_reward
 from data_preprocessor import load_dictionaries, normalize_frequencies
-from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, WORD_FREQS_FILE
+from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING, WORD_FREQS_FILE
 
 class AlphalockEnvironment:
     def __init__(self):
@@ -69,7 +69,7 @@ class AlphalockEnvironment:
 
         # Check if the game is over
         if feedback == (2, 2, 2, 2):  # Correct solution
-            reward = compute_reward(True, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY)
+            reward = compute_reward(True, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
             done = True
         else:
             # Update the possible word pool based on feedback
@@ -82,7 +82,7 @@ class AlphalockEnvironment:
 
             # Check if the game is over due to attempts running out
             if self.attempts_remaining == 0:
-                reward = compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY)
+                reward = compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
                 done = True
             else:
                 reward = 0  # No reward for intermediate steps
