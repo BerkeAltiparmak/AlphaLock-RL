@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 import json
@@ -21,7 +22,7 @@ def flatten_state(state):
         len(state["feedback_history"]),  # Derived numeric value
     ]
 
-def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99):
+def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path="trained_rl_agent.pth"):
     """
     Train the RL agent on the Alphalock game.
 
@@ -32,13 +33,25 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
     - hidden_dim (int): Number of hidden units in the policy network.
     - lr (float): Learning rate for the RL agent.
     - gamma (float): Discount factor.
+    - model_path (str): Path to the saved model file.
 
     Returns:
     - RLAgent: Trained RL agent.
     """
-    # Initialize the environment and the agent
+    # Initialize the environment
     env = AlphalockEnvironment()
+    
+    # Initialize the agent
     agent = RLAgent(state_dim, hidden_dim, lr, gamma)
+
+    # Load the model if it exists
+    if os.path.exists(model_path):
+        print(f"Model found at {model_path}. Loading...")
+        agent.load_model(model_path)
+        print("Model loaded successfully.")
+    else:
+        print(f"No existing model found at {model_path}. Starting fresh training.")
+
     alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
 
     # Data tracking
@@ -132,7 +145,6 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
         json.dump(episode_guesses, f, indent=4)
 
     return agent
-
 
 if __name__ == "__main__":
     # Train the agent
