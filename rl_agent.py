@@ -29,25 +29,27 @@ done = False
 cumulative_reward = 0
 print("Testing the trained model...")
 while not done:
-    # Predict action and get alpha_beta from the policy
     action, _ = model.predict(obs)
-    word_guess = allowed_words[action[0]]
+    if action[0] < len(env.envs[0].unwrapped.current_pool):  # Ensure valid action
+        word_guess = env.envs[0].unwrapped.current_pool[action[0]]
+    else:
+        print("Invalid action index:", action[0])
+        word_guess = "Invalid"
     print(f"Action (word index): {action}, Predicted Word: {word_guess}")
 
-    # Convert alpha_beta Tensor to NumPy array and extract alpha and beta
     alpha_beta = model.policy.get_alpha_beta().detach().numpy()
     alpha, beta = alpha_beta[0, 0], alpha_beta[0, 1]
     print(f"Alpha: {alpha}, Beta: {beta}")
 
-    # Set alpha and beta in the environment
     env.envs[0].unwrapped.set_alpha_beta(alpha, beta)
-
-    # Perform the action
     obs, reward, done, _ = env.step(action)
     cumulative_reward += reward
     env.render()
 
+    print(f"Remaining Pool Size: {len(env.envs[0].unwrapped.current_pool)}")
+
 print(f"Cumulative Reward: {cumulative_reward}")
+
 
 
 

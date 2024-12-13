@@ -41,8 +41,8 @@ class AlphaLockEnv(gym.Env):
             self.seed(self.seed_value)
         self.current_pool = self.allowed_words.copy()
         self.turn = 0
-        self.alpha = 0.5  # Reset alpha
-        self.beta = 0.5   # Reset beta
+        self.alpha = 0.9  # Reset alpha
+        self.beta = 0.1   # Reset beta
         self.state = {
             "pool_size": len(self.current_pool),
             "turn": self.turn,
