@@ -11,10 +11,17 @@ def calculate_relative_word_frequencies(possible_words, word_frequencies):
     """
     # Extract frequencies for possible words
     pool_frequencies = {word: word_frequencies.get(word, 0) for word in possible_words}
-    total_frequency = sum(pool_frequencies.values())
+    
+    # Get minimum and maximum frequencies
+    min_freq = min(pool_frequencies.values())
+    max_freq = max(pool_frequencies.values())
 
-    # Normalize frequencies
-    if total_frequency > 0:
-        return {word: freq / total_frequency for word, freq in pool_frequencies.items()}
+    # Normalize frequencies to [0, 1]
+    if max_freq > min_freq:
+        return {
+            word: (freq - min_freq) / (max_freq - min_freq)
+            for word, freq in pool_frequencies.items()
+        }
     else:
-        return {word: 0 for word in possible_words}
+        # If all frequencies are the same, return 1 for all words
+        return {word: 1 for word in possible_words}
