@@ -46,25 +46,28 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
         print(f"Episode {episode + 1}/{episodes}")
 
         while not done:
-            # Agent selects action (alpha, beta)
-            flat_state = flatten_state(state)
-            action = agent.select_action(flat_state)
-            alpha, beta = action
+            if len(env.feedback_history) == 0:  # First guess
+                guess = "sera"  # Predefined optimal first guess
+                alpha, beta = None, None  # No action for the first guess
+            else:
+                # Flatten state and select action
+                flat_state = flatten_state(state)
+                action = agent.select_action(flat_state)
+                alpha, beta = action
 
-            # Pick the best word using the score calculator
-            guess = select_best_word(
-                env.allowed_words,
-                env.possible_words,
-                env.word_frequencies,
-                alpha,
-                beta
-            )
+                # Pick the best word using the score calculator
+                guess = select_best_word(
+                    env.allowed_words,
+                    env.possible_words,
+                    env.word_frequencies,
+                    alpha,
+                    beta
+                )
 
             # Step through the environment
             next_state, reward, done = env.step(guess, alpha, beta)
             agent.store_reward(reward)
             episode_rewards.append(reward)
-
             state = next_state
 
         # Update the agent's policy
