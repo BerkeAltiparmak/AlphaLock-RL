@@ -28,8 +28,21 @@ obs = env.reset()
 done = False
 print("Testing the trained model...")
 while not done:
+    # Predict action and get alpha_beta from the policy
     action, _ = model.predict(obs)
-    alpha_beta = model.policy.get_alpha_beta()  # Get alpha and beta from the policy
-    env.envs[0].set_alpha_beta(alpha_beta[0].item(), alpha_beta[1].item())  # Set alpha and beta in the environment
+    word_guess = allowed_words[action[0]]
+    print(f"Action (word index): {action}, Predicted Word: {word_guess}")
+
+    # Convert alpha_beta Tensor to NumPy array and extract alpha and beta
+    alpha_beta = model.policy.get_alpha_beta().detach().numpy()
+    alpha, beta = alpha_beta[0, 0], alpha_beta[0, 1]
+    print(f"Alpha: {alpha}, Beta: {beta}")
+
+    # Set alpha and beta in the environment
+    env.envs[0].unwrapped.set_alpha_beta(alpha, beta)
+
+    # Perform the action
     obs, reward, done, _ = env.step(action)
     env.render()
+
+
