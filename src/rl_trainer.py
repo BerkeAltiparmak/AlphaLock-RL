@@ -46,11 +46,12 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
 
         print(f"Episode {episode + 1}/{episodes}")
 
+        alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
+
         while not done:
             start_time = time.time()
             if len(env.feedback_history) == 0:  # First guess
-                guess = "sera"  # Predefined optimal first guess
-                alpha, beta = None, None  # No action for the first guess
+                guess = "sera"  # Precomputed optimal first guess through Information Theory
             else:
                 # Flatten state and select action
                 flat_state = flatten_state(state)
