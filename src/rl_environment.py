@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from pattern_utils import generate_pattern
 from reward_calculator import compute_reward
 from data_preprocessor import load_dictionaries, normalize_frequencies
@@ -23,10 +24,19 @@ class AlphalockEnvironment:
 
         Returns:
         - dict: Initial state.
-        """
+            """
         words = list(self.word_frequencies.keys())
         frequencies = list(self.word_frequencies.values())
-        self.solution = random.choices(words, weights=frequencies, k=1)[0]  # Realistic random solution based on frequency
+
+        # Apply a smoother transformation to the frequencies, using log
+        smoothed_weights = [np.log(freq+0.0001) for freq in frequencies]
+
+        # Normalize the smoothed weights to ensure they sum to 1
+        total_weight = sum(smoothed_weights)
+        normalized_weights = [w / total_weight for w in smoothed_weights]
+
+        # Now we have a realistic random solution based on frequency that would imitate AlphaLock creator's mindset
+        self.solution = random.choices(words, weights=normalized_weights, k=1)[0]
 
         self.possible_words = self.allowed_words.copy()  # All words are initially possible
         self.attempts_remaining = MAX_ATTEMPTS
@@ -93,10 +103,10 @@ class AlphalockEnvironment:
 
             # Check if the game is over due to attempts running out
             if self.attempts_remaining == 0:
-                reward = INTERMEDIATE_SCALING * compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
+                reward = compute_reward(False, self.attempts_remaining, MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY, REWARD_SCALING)
                 done = True
             else:
-                reward = intermediate_reward  # Reward for reducing the pool
+                reward = INTERMEDIATE_SCALING * intermediate_reward  # Reward for reducing the pool
                 done = False
 
         # Return the new state, reward, and done flag

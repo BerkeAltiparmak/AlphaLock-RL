@@ -61,9 +61,8 @@ def calculate_scores(allowed_words, possible_words, word_frequencies, alpha, bet
             highest_it_score = it_score
             highest_it_word = word
 
-    # Print the word with the highest it_score and its score
+    # Print the word with the highest it_score
     print(f"Word with the highest IT score: {highest_it_word}")
-    print(f"Highest IT score: {highest_it_score}")
     return scores
 
 def select_best_word(allowed_words, possible_words, word_frequencies, alpha, beta):
