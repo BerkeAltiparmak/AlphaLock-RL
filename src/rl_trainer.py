@@ -1,6 +1,7 @@
 import numpy as np
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
+from score_calculator import select_best_word
 from config import MAX_ATTEMPTS, SUCCESS_REWARD, FAILURE_PENALTY
 
 def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99):
@@ -33,13 +34,14 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
             action = agent.select_action(list(state.values()))
             alpha, beta = action
 
-            # Pick the word with the highest score using alpha and beta
-            possible_words = env.possible_words
-            word_scores = {
-                word: alpha * env.calculate_entropy(word) + beta * env.word_frequencies[word]
-                for word in possible_words
-            }
-            guess = max(word_scores, key=word_scores.get)
+            # Pick the best word using the score calculator
+            guess = select_best_word(
+                env.allowed_words,
+                env.possible_words,
+                env.word_frequencies,
+                alpha,
+                beta
+            )
 
             # Step through the environment
             next_state, reward, done = env.step(guess, alpha, beta)
@@ -83,13 +85,14 @@ def evaluate_agent(agent, episodes=100):
             action = agent.select_action(list(state.values()))
             alpha, beta = action
 
-            # Pick the word with the highest score using alpha and beta
-            possible_words = env.possible_words
-            word_scores = {
-                word: alpha * env.calculate_entropy(word) + beta * env.word_frequencies[word]
-                for word in possible_words
-            }
-            guess = max(word_scores, key=word_scores.get)
+            # Pick the best word using the score calculator
+            guess = select_best_word(
+                env.allowed_words,
+                env.possible_words,
+                env.word_frequencies,
+                alpha,
+                beta
+            )
 
             # Step through the environment
             next_state, reward, done = env.step(guess, alpha, beta)
@@ -113,4 +116,4 @@ if __name__ == "__main__":
     trained_agent = train_agent(episodes=1000)
 
     # Evaluate the agent
-    evaluate_agent(trained_agent, episodes=100)
+    #evaluate_agent(trained_agent, episodes=100)

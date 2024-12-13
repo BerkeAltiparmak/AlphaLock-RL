@@ -11,4 +11,4 @@ SUCCESS_REWARD = 100
 FAILURE_PENALTY = -50
 
 # Data Paths
-WORD_FREQS_FILE = "4letter_word_freqs.json"
+WORD_FREQS_FILE = "../data/4letter_word_freqs.json"
