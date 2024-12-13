@@ -1,2 +1,6 @@
 #ngram_freq.csv
 #words_alpha.txt
+__paycache__/
+src/__paycache__/
+.DS_Store
+src/.DS_Store
