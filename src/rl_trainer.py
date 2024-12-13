@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import json
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
 from reward_calculator import select_best_word
@@ -26,6 +27,7 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
 
     Parameters:
     - episodes (int): Number of training episodes.
+    - batch_size (int): Number of episodes per policy update.
     - state_dim (int): Dimension of the state space.
     - hidden_dim (int): Number of hidden units in the policy network.
     - lr (float): Learning rate for the RL agent.
@@ -39,10 +41,18 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
     agent = RLAgent(state_dim, hidden_dim, lr, gamma)
     alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
 
+    # Data tracking
+    alpha_beta_mapping = {}
+    episode_rewards = {}
+    episode_guesses = {}
+    batch_rewards = []
+    batch_guesses = []
+
     for episode in range(episodes):
         state = env.reset()
         done = False
-        episode_rewards = []
+        total_guesses = 0
+        episode_total_rewards = []
 
         print(f"Episode {episode + 1}/{episodes}")
 
@@ -57,6 +67,12 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
                 action = agent.select_action(flat_state)
                 alpha, beta = action
 
+                # Store alpha, beta values mapped to state keys
+                alpha_beta_mapping[(state["pool_entropy"], state["attempts_remaining"])] = {
+                    "alpha": alpha,
+                    "beta": beta
+                }
+
                 # Pick the best word using the score calculator
                 guess = select_best_word(
                     env.allowed_words,
@@ -69,7 +85,8 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             # Step through the environment
             next_state, reward, done = env.step(guess, alpha, beta)
             agent.store_reward(reward)
-            episode_rewards.append(reward)
+            episode_total_rewards.append(reward)
+            total_guesses += 1
             end_time = time.time()
 
             # Log guess details
@@ -83,13 +100,36 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             state = next_state
 
         # Log the results of the episode
-        total_reward = sum(episode_rewards)
-        print(f"Episode {episode + 1} finished with total reward: {total_reward}")
+        total_reward = sum(episode_total_rewards)
+        print(f"Episode {episode} finished with total reward: {total_reward}")
+        print(f"Total guesses needed: {total_guesses}")
+
+        # Store episode data
+        episode_rewards[episode] = total_reward
+        episode_guesses[episode] = total_guesses
+        batch_rewards.append(total_reward)
+        batch_guesses.append(total_guesses)
 
         # Perform policy update after a batch of episodes
         if (episode + 1) % batch_size == 0:
             agent.update_policy()
+            avg_batch_reward = np.mean(batch_rewards)
+            avg_batch_guesses = np.mean(batch_guesses)
             print(f"Policy updated after batch of {batch_size} episodes.")
+            print(f"Average reward in last batch: {avg_batch_reward}")
+            print(f"Average guess in last batch: {avg_batch_guesses}")
+            batch_rewards = []  # Reset batch rewards
+            batch_guesses = []  # Reset batch guesses
+
+    # Save data to JSON files
+    with open("alpha_beta_mapping.json", "w") as f:
+        json.dump(alpha_beta_mapping, f, indent=4)
+
+    with open("episode_rewards.json", "w") as f:
+        json.dump(episode_rewards, f, indent=4)
+
+    with open("episode_guesses.json", "w") as f:
+        json.dump(episode_guesses, f, indent=4)
 
     return agent
 
@@ -147,7 +187,7 @@ def evaluate_agent(agent, episodes=100):
 
 if __name__ == "__main__":
     # Train the agent
-    trained_agent = train_agent(episodes=1000)
+    trained_agent = train_agent(episodes=1000, batch_size=4)
     trained_agent.save_model("trained_rl_agent.pth")
 
     # Evaluate the agent
