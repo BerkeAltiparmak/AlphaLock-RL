@@ -133,62 +133,8 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
 
     return agent
 
-def evaluate_agent(agent, episodes=100):
-    """
-    Evaluate the performance of the trained RL agent.
-
-    Parameters:
-    - agent (RLAgent): Trained RL agent.
-    - episodes (int): Number of evaluation episodes.
-
-    Returns:
-    - float: Average reward over evaluation episodes.
-    - float: Success rate (percentage of games won).
-    """
-    env = AlphalockEnvironment()
-    total_rewards = []
-    successes = 0
-
-    for episode in range(episodes):
-        state = env.reset()
-        done = False
-        episode_rewards = []
-
-        while not done:
-            # Agent selects action (alpha, beta)
-            action = agent.select_action(list(state.values()))
-            alpha, beta = action
-
-            # Pick the best word using the score calculator
-            guess = select_best_word(
-                env.allowed_words,
-                env.possible_words,
-                env.word_frequencies,
-                alpha,
-                beta
-            )
-
-            # Step through the environment
-            next_state, reward, done = env.step(guess, alpha, beta)
-            episode_rewards.append(reward)
-
-            state = next_state
-
-        # Track success and total rewards
-        total_rewards.append(sum(episode_rewards))
-        if reward > 0:  # Positive reward indicates success
-            successes += 1
-
-    avg_reward = np.mean(total_rewards)
-    success_rate = (successes / episodes) * 100
-    print(f"Evaluation results: Avg Reward = {avg_reward}, Success Rate = {success_rate}%")
-
-    return avg_reward, success_rate
 
 if __name__ == "__main__":
     # Train the agent
-    trained_agent = train_agent(episodes=1000, batch_size=4)
+    trained_agent = train_agent(episodes=60, batch_size=4)
     trained_agent.save_model("trained_rl_agent.pth")
-
-    # Evaluate the agent
-    #evaluate_agent(trained_agent, episodes=100)
