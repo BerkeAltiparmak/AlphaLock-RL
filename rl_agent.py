@@ -18,7 +18,7 @@ env = make_vec_env(lambda: env, n_envs=1)
 
 # Train PPO agent with custom policy
 model = PPO(CustomPPOPolicy, env, verbose=1)
-model.learn(total_timesteps=10000)
+model.learn(total_timesteps=2)
 
 # Save the trained model
 model.save("ppo_alphalock_with_weights")
