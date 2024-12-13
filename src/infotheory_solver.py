@@ -29,10 +29,10 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
         feedback = generate_pattern(guess, solution)
         possible_words = update_possible_words(guess, feedback, possible_words)
         guesses.append(guess)
+        possible_words_list.append(list(possible_words))
+        feedback_list.append(feedback)
         attempts += 1
         end_time = time.time()
-        print(f"Attempt {attempts}: Guess = {guess}, Feedback = {feedback}, Remaining Words = {len(possible_words)}")
-        print(f"Time for Guess {attempts}: {end_time - start_time:.2f} seconds")
 
     # Continue with entropy-based guesses for subsequent rounds
     while len(possible_words) > 1 and attempts < max_attempts:
@@ -42,16 +42,17 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
         feedback = generate_pattern(guess, solution)
         possible_words = update_possible_words(guess, feedback, possible_words)
         guesses.append(guess)
+        possible_words_list.append(list(possible_words))
+        feedback_list.append(feedback)
         end_time = time.time()
-        print(f"Attempt {attempts}: Guess = {guess}, Feedback = {feedback}, Remaining Words = {len(possible_words)}")
-        print(f"Time for Guess {attempts}: {end_time - start_time:.2f} seconds")
 
     # Handle the final guess if only one word remains
     if len(possible_words) == 1:
         guesses.append(possible_words[0])
+        possible_words_list.append(list(possible_words))
+        feedback_list.append((2, 2, 2, 2))  # Exact match feedback
 
     if attempts >= max_attempts:
         print("Warning: Maximum attempts reached. The game might not have converged.")
 
-    return guesses, 
-
+    return guesses, possible_words_list, feedback_list
