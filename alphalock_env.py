@@ -16,15 +16,17 @@ class AlphaLockEnv(gym.Env):
         self.turn = 0
         self.max_turns = 10
         self.seed_value = None
+        self.alpha = 0.5  # Default initial value
+        self.beta = 0.5   # Default initial value
 
         # Action and observation space
         self.action_space = spaces.Discrete(len(allowed_words))
-        self.observation_space = spaces.Dict({
-            "pool_size": spaces.Discrete(len(allowed_words) + 1),  # Include 0 as a valid value
-            "turn": spaces.Discrete(self.max_turns + 1),  # Turn can range from 0 to max_turns
-            "alpha": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-            "beta": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-        })
+        self.observation_space = spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(4,),  # Flattened format: [pool_size, turn, alpha, beta]
+            dtype=np.float32,
+        )
 
     def seed(self, seed=None):
         """Set the seed for reproducibility."""
@@ -38,16 +40,22 @@ class AlphaLockEnv(gym.Env):
             self.seed(self.seed_value)
         self.current_pool = self.allowed_words.copy()
         self.turn = 0
+        self.alpha = 0.5  # Reset alpha
+        self.beta = 0.5   # Reset beta
         self.state = {
             "pool_size": len(self.current_pool),
             "turn": self.turn,
-            "alpha": np.array([0.5]),  # Start with equal weights
-            "beta": np.array([0.5])
+            "alpha": self.alpha,
+            "beta": self.beta,
         }
-        return self.state
+        return self._flatten_state()
 
-    def step(self, action, alpha, beta):
+    def step(self, action):
         """Execute one step in the environment."""
+        # Retrieve alpha and beta from the policy (stored in state)
+        alpha = self.alpha
+        beta = self.beta
+
         guess = self.allowed_words[action]
         feedback = generate_pattern(guess, self.secret_code)
         self.current_pool = [word for word in self.current_pool if generate_pattern(guess, word) == feedback]
@@ -64,10 +72,24 @@ class AlphaLockEnv(gym.Env):
         self.state = {
             "pool_size": len(self.current_pool),
             "turn": self.turn,
-            "alpha": np.array([alpha]),
-            "beta": np.array([beta])
+            "alpha": alpha,
+            "beta": beta,
         }
-        return self.state, reward, done, {}
+        return self._flatten_state(), reward, done, {}
+
+    def set_alpha_beta(self, alpha, beta):
+        """Set alpha and beta values."""
+        self.alpha = alpha
+        self.beta = beta
+
+    def _flatten_state(self):
+        """Flatten the state dictionary into a NumPy array."""
+        return np.array([
+            self.state["pool_size"] / len(self.allowed_words),  # Normalize pool size
+            self.state["turn"] / self.max_turns,  # Normalize turn
+            self.state["alpha"],
+            self.state["beta"],
+        ], dtype=np.float32)
 
     def render(self):
         print(f"Turn: {self.turn}, Pool Size: {len(self.current_pool)}")

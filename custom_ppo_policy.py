@@ -15,6 +15,17 @@ class CustomPPOPolicy(ActorCriticPolicy):
         )
 
     def forward(self, obs, deterministic=False):
+        # Compute the standard outputs: actions, values, and log_probs
         actions, values, log_prob = super(CustomPPOPolicy, self).forward(obs, deterministic)
+
+        # Compute alpha and beta as trainable parameters
         alpha_beta = self.alpha_beta_net(self.features_extractor(obs))
-        return actions, values, log_prob, alpha_beta
+
+        # Save alpha and beta as part of the policy’s internal state
+        self.alpha_beta = alpha_beta
+
+        return actions, values, log_prob
+
+    def get_alpha_beta(self):
+        """Get the alpha and beta values (trainable weights)."""
+        return self.alpha_beta
