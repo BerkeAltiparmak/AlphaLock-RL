@@ -1,6 +1,6 @@
 import json
 import time
-from infotheory_solver import simulate_game
+from src.infotheory_solver import simulate_game
 
 # Start timing
 total_start = time.time()

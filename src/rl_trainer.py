@@ -65,7 +65,7 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             start_time = time.time()
             
             if len(env.feedback_history) == 0:  # First guess
-                guess = "sera"  # Precomputed optimal first guess through Information Theory
+                guess = "sare"  # Precomputed optimal first guess through Information Theory
             else:
                 # Flatten state and select action
                 flat_state = flatten_state(state)
