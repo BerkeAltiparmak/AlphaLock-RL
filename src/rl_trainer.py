@@ -68,6 +68,14 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
             next_state, reward, done = env.step(guess, alpha, beta)
             agent.store_reward(reward)
             episode_rewards.append(reward)
+
+            # Log guess details
+            print(f"Episode {episode + 1}, Guess #{len(env.feedback_history)}:")
+            print(f"  Word: {guess}")
+            print(f"  Alpha: {alpha}, Beta: {beta}")
+            print(f"  Pool Size: {len(env.possible_words)}")
+            print(f"  Word to Solve: {env.solution}")
+
             state = next_state
 
         # Update the agent's policy
