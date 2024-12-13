@@ -6,26 +6,26 @@ class CustomPPOPolicy(ActorCriticPolicy):
     def __init__(self, observation_space, action_space, lr_schedule, *args, **kwargs):
         super(CustomPPOPolicy, self).__init__(observation_space, action_space, lr_schedule, *args, **kwargs)
 
-        # Add two additional outputs: alpha and beta
+        # Network to output alpha and beta dynamically
         self.alpha_beta_net = nn.Sequential(
             nn.Linear(self.features_dim, 64),
             nn.ReLU(),
-            nn.Linear(64, 2),  # Output alpha and beta
-            nn.Softmax(dim=-1)  # Ensure they sum to 1
+            nn.Linear(64, 2),  # Outputs alpha and beta
+            nn.Softmax(dim=-1)  # Ensure alpha + beta = 1
         )
 
     def forward(self, obs, deterministic=False):
-        # Compute the standard outputs: actions, values, and log_probs
+        # Standard PPO outputs: actions, values, log_probs
         actions, values, log_prob = super(CustomPPOPolicy, self).forward(obs, deterministic)
 
-        # Compute alpha and beta as trainable parameters
+        # Calculate alpha and beta dynamically
         alpha_beta = self.alpha_beta_net(self.features_extractor(obs))
 
-        # Save alpha and beta as part of the policy’s internal state
+        # Save alpha and beta for retrieval
         self.alpha_beta = alpha_beta
 
         return actions, values, log_prob
 
     def get_alpha_beta(self):
-        """Get the alpha and beta values (trainable weights)."""
+        """Retrieve the dynamically calculated alpha and beta."""
         return self.alpha_beta
