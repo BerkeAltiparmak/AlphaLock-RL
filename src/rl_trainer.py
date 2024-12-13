@@ -5,7 +5,7 @@ import json
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
 from reward_calculator import select_best_word
-from utils import flatten_state, load_json, save_json 
+from utils import flatten_state, load_json, save_json, load_alpha_beta_mapping, save_alpha_beta_mapping
 
 def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path="trained_rl_agent.pth"):
     """
@@ -37,10 +37,10 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
     else:
         print(f"No existing model found at {model_path}. Starting fresh training.")
 
-    alpha, beta = 0.9, 0.1  # Initial alpha and beta values (defined to explore early)
+    alpha, beta = 1.0, 0  # Initial alpha and beta values (defined to explore early)
 
     # Load existing JSON files if they exist
-    alpha_beta_mapping = load_json("alpha_beta_mapping.json")
+    alpha_beta_mapping = load_alpha_beta_mapping("alpha_beta_mapping.json")
     episode_rewards = load_json("episode_rewards.json")
     episode_guesses = load_json("episode_guesses.json")
 
@@ -72,7 +72,8 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
                 alpha, beta = action
 
                 # Store alpha, beta values mapped to state keys
-                alpha_beta_mapping[(state["pool_entropy"], state["attempts_remaining"])] = {
+                # Convert tuple keys to unique strings
+                alpha_beta_mapping[f"{current_episode}:{10 - state['attempts_remaining']},{state['pool_entropy']}"] = {
                     "alpha": alpha,
                     "beta": beta
                 }
@@ -126,7 +127,7 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
             batch_guesses = []  # Reset batch guesses
 
     # Save updated JSON files
-    save_json(alpha_beta_mapping, "alpha_beta_mapping.json")
+    save_alpha_beta_mapping(alpha_beta_mapping, "alpha_beta_mapping.json")
     save_json(episode_rewards, "episode_rewards.json")
     save_json(episode_guesses, "episode_guesses.json")
 
@@ -134,5 +135,5 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
 
 if __name__ == "__main__":
     # Train the agent
-    trained_agent = train_agent(episodes=60, batch_size=4)
+    trained_agent = train_agent(episodes=1, batch_size=4)
     trained_agent.save_model("trained_rl_agent.pth")
