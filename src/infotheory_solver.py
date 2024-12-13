@@ -24,7 +24,6 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
 
     # Use the provided first guess if available
     if first_guess:
-        start_time = time.time()
         guess = first_guess
         feedback = generate_pattern(guess, solution)
         possible_words = update_possible_words(guess, feedback, possible_words)
@@ -32,11 +31,9 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
         possible_words_list.append(list(possible_words))
         feedback_list.append(feedback)
         attempts += 1
-        end_time = time.time()
 
     # Continue with entropy-based guesses for subsequent rounds
     while len(possible_words) > 1 and attempts < max_attempts:
-        start_time = time.time()
         attempts += 1
         guess = select_best_guess(allowed_words, possible_words)
         feedback = generate_pattern(guess, solution)
@@ -44,7 +41,6 @@ def simulate_game(allowed_words, possible_words, solution, first_guess=None, max
         guesses.append(guess)
         possible_words_list.append(list(possible_words))
         feedback_list.append(feedback)
-        end_time = time.time()
 
     # Handle the final guess if only one word remains
     if len(possible_words) == 1:

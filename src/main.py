@@ -7,6 +7,7 @@ from rl_agent import RLAgent
 from rl_environment import AlphalockEnvironment
 from reward_calculator import select_best_word
 from config import WORD_FREQS_FILE, MODEL_PATH
+from pattern_utils import generate_pattern
 
 def generate_random_solution(word_frequencies):
     """
@@ -25,7 +26,7 @@ def generate_random_solution(word_frequencies):
     solution = random.choices(words, weights=normalized_weights, k=1)[0]
     return solution
 
-def log_guess_details(guess_num, guess, pool_size, alpha=None, model_type="IT"):
+def log_guess_details(guess_num, guess, pool_size, feedback=None, alpha=None, model_type="IT"):
     """
     Log details for each guess in a uniform format.
 
@@ -33,12 +34,15 @@ def log_guess_details(guess_num, guess, pool_size, alpha=None, model_type="IT"):
     - guess_num (int): Guess number.
     - guess (str): The guessed word.
     - pool_size (int): The remaining pool size.
+    - feedback (tuple, optional): Feedback for the guess.
     - alpha (float, optional): Information theory coefficient (for RL-based solver).
     - model_type (str): Model type ("IT" or "RL").
     """
-    print(f"[{model_type}] Guess #{guess_num}: Word = {guess}, Pool Size = {pool_size}")
-    if alpha is not None:
-        print(f"  Information Theory Coefficient: {alpha}")
+    if feedback == (2, 2, 2, 2):
+        print(f"[{model_type}] Guess #{guess_num}: Word = {guess}, Pool Size = SOLVED")
+    else:
+        print(f"[{model_type}] Guess #{guess_num}: Word = {guess}, Pool Size = {pool_size}")
+    print(f"  Feedback: {feedback}")
 
 def compare_models(allowed_words, word_frequencies, num_trials=10):
     """
@@ -62,12 +66,14 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
         # Information Theory-based solver
         print("Running Information Theory-based solver...")
         it_start = time.time()
-        it_guesses = simulate_game(allowed_words, allowed_words.copy(), solution, first_guess="sera")
+        it_guesses, it_possible_words_list, it_feedback_list = simulate_game(
+            allowed_words, allowed_words.copy(), solution, first_guess="sera"
+        )
         it_time = time.time() - it_start
         it_results.append((len(it_guesses), it_time))
 
-        for i, guess in enumerate(it_guesses, start=1):
-            log_guess_details(i, guess, len(allowed_words), model_type="IT")
+        for i, (guess, possible_words, feedback) in enumerate(zip(it_guesses, it_possible_words_list, it_feedback_list), start=1):
+            log_guess_details(i, guess, len(possible_words), feedback=feedback, model_type="IT")
 
         print(f"IT-based solver's final prediction: {it_guesses[-1]}")
         print(f"IT-based solver finished in {len(it_guesses)} guesses and {it_time:.2f} seconds.")
@@ -91,6 +97,7 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
         while not done:
             if len(env.feedback_history) == 0:
                 guess = "sera"  # First guess
+                feedback = generate_pattern(guess, solution)
             else:
                 flat_state = [
                     state["pool_entropy"],
@@ -108,12 +115,13 @@ def compare_models(allowed_words, word_frequencies, num_trials=10):
                     alpha,
                     beta
                 )
+                feedback = generate_pattern(guess, solution)
 
             rl_guesses.append(guess)
             state, _, done = env.step(guess, alpha, beta)
 
             # Log guess details
-            log_guess_details(len(rl_guesses), guess, len(env.possible_words), alpha=alpha, model_type="RL")
+            log_guess_details(len(rl_guesses), guess, len(env.possible_words), feedback=feedback, alpha=alpha, model_type="RL")
 
         rl_time = time.time() - rl_start
         rl_results.append((len(rl_guesses), rl_time))
