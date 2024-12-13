@@ -6,9 +6,9 @@ from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
 from reward_calculator import select_best_word
 from utils import flatten_state, load_json, save_json, load_alpha_beta_mapping, save_alpha_beta_mapping
-from config import ALPHA_BETA_MAPPING_FILE, EPISODE_REWARDS_FILE, EPISODE_GUESSES_FILE, MODEL_PATH
+from config import ALPHA_BETA_MAPPING_FILE, EPISODE_REWARDS_FILE, EPISODE_GUESSES_FILE, MODEL_PATH, LEARNING_RATE, DISCOUNT_FACTOR
 
-def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99, model_path=MODEL_PATH):
+def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=LEARNING_RATE, gamma=DISCOUNT_FACTOR, model_path=MODEL_PATH):
     """
     Train the RL agent on the Alphalock game.
 
@@ -136,6 +136,6 @@ def train_agent(episodes=1000, batch_size=4, state_dim=3, hidden_dim=128, lr=0.0
 
 if __name__ == "__main__":
     # Train the agent
-    trained_agent = train_agent(episodes=1, batch_size=4)
+    trained_agent = train_agent(episodes=60, batch_size=4)
     trained_agent.save_model(MODEL_PATH)
     print(f"Trained model saved at {MODEL_PATH}.")
