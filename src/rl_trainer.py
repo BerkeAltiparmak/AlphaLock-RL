@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from rl_environment import AlphalockEnvironment
 from rl_agent import RLAgent
@@ -46,6 +47,7 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
         print(f"Episode {episode + 1}/{episodes}")
 
         while not done:
+            start_time = time.time()
             if len(env.feedback_history) == 0:  # First guess
                 guess = "sera"  # Predefined optimal first guess
                 alpha, beta = None, None  # No action for the first guess
@@ -68,6 +70,7 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
             next_state, reward, done = env.step(guess, alpha, beta)
             agent.store_reward(reward)
             episode_rewards.append(reward)
+            end_time = time.time()
 
             # Log guess details
             print(f"Episode {episode + 1}, Guess #{len(env.feedback_history)}:")
@@ -75,6 +78,7 @@ def train_agent(episodes=1000, state_dim=3, hidden_dim=128, lr=0.001, gamma=0.99
             print(f"  Alpha: {alpha}, Beta: {beta}")
             print(f"  Pool Size: {len(env.possible_words)}")
             print(f"  Word to Solve: {env.solution}")
+            print(f"  Time Taken: {end_time - start_time:.4f} seconds")
 
             state = next_state
 
