@@ -24,7 +24,10 @@ class AlphalockEnvironment:
         Returns:
         - dict: Initial state.
         """
-        self.solution = random.choice(self.allowed_words)  # Randomly select a solution
+        words = list(self.word_frequencies.keys())
+        frequencies = list(self.word_frequencies.values())
+        self.solution = random.choices(words, weights=frequencies, k=1)[0]  # Realistic random solution based on frequency
+
         self.possible_words = self.allowed_words.copy()  # All words are initially possible
         self.attempts_remaining = MAX_ATTEMPTS
         self.feedback_history = []
