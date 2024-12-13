@@ -6,7 +6,7 @@ from entropy_calculation import calculate_entropies
 from pattern_utils import generate_pattern
 
 class AlphaLockEnv(gym.Env):
-    def __init__(self, allowed_words, word_frequencies, secret_code):
+    def __init__(self, allowed_words, word_frequencies, secret_code, alpha=0.5, beta=0.5, render_mode=None):
         super(AlphaLockEnv, self).__init__()
         self.allowed_words = allowed_words
         self.word_frequencies = word_frequencies
@@ -16,8 +16,9 @@ class AlphaLockEnv(gym.Env):
         self.turn = 0
         self.max_turns = 10
         self.seed_value = None
-        self.alpha = 0.5  # Default initial value
-        self.beta = 0.5   # Default initial value
+        self.render_mode = render_mode
+        self.alpha = alpha
+        self.beta = beta
 
         # Action and observation space
         self.action_space = spaces.Discrete(len(allowed_words))
@@ -52,28 +53,28 @@ class AlphaLockEnv(gym.Env):
 
     def step(self, action):
         """Execute one step in the environment."""
-        # Retrieve alpha and beta from the policy (stored in state)
-        alpha = self.alpha
-        beta = self.beta
-
         guess = self.allowed_words[action]
         feedback = generate_pattern(guess, self.secret_code)
         self.current_pool = [word for word in self.current_pool if generate_pattern(guess, word) == feedback]
         self.turn += 1
         correct_guess = (guess == self.secret_code)
 
+        # Dynamic alpha and beta adjustment based on the turn
+        self.alpha = 0.7 - 0.05 * self.turn  # Decrease alpha over time
+        self.beta = 0.3 + 0.05 * self.turn  # Increase beta over time
+
         # Compute rewards
         pool_size_penalty = -len(self.current_pool)
         it_score = calculate_entropies([guess], self.current_pool).get(guess, 0)
         rwf_score = self.word_frequencies.get(guess, 0) / sum(self.word_frequencies.values())
-        reward = (100 / self.turn if correct_guess else 0) + alpha * it_score + beta * rwf_score + pool_size_penalty
+        reward = (100 / self.turn if correct_guess else 0) + self.alpha * it_score + self.beta * rwf_score + pool_size_penalty
 
         done = correct_guess or self.turn >= self.max_turns
         self.state = {
             "pool_size": len(self.current_pool),
             "turn": self.turn,
-            "alpha": alpha,
-            "beta": beta,
+            "alpha": self.alpha,
+            "beta": self.beta,
         }
         return self._flatten_state(), reward, done, {}
 

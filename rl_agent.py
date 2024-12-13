@@ -18,7 +18,7 @@ env = make_vec_env(lambda: env, n_envs=1)
 
 # Train PPO agent with custom policy
 model = PPO(CustomPPOPolicy, env, verbose=1)
-model.learn(total_timesteps=2)
+model.learn(total_timesteps=10000)
 
 # Save the trained model
 model.save("ppo_alphalock_with_weights")
@@ -26,6 +26,7 @@ model.save("ppo_alphalock_with_weights")
 # Test the agent
 obs = env.reset()
 done = False
+cumulative_reward = 0
 print("Testing the trained model...")
 while not done:
     # Predict action and get alpha_beta from the policy
@@ -43,6 +44,10 @@ while not done:
 
     # Perform the action
     obs, reward, done, _ = env.step(action)
+    cumulative_reward += reward
     env.render()
+
+print(f"Cumulative Reward: {cumulative_reward}")
+
 
 

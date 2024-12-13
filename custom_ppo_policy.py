@@ -28,4 +28,4 @@ class CustomPPOPolicy(ActorCriticPolicy):
 
     def get_alpha_beta(self):
         """Get the alpha and beta values (trainable weights)."""
-        return self.alpha_beta
+        return self.alpha_beta.detach().numpy()
