@@ -6,6 +6,9 @@ This repository implements a comprehensive pipeline for solving **Alphalock**, a
 
 The project also includes detailed logging, visualizations, and training workflows, enabling an in-depth analysis of model performance.
 
+The research paper for this project can be found here: [AlphaLock-RL.pdf](AlphaLock-RL.pdf)
+
+
 ## **Table of Contents**
 - [Features](#features)
 - [Project Structure](#project-structure)
